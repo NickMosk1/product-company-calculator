@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { useRef } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -22,6 +23,8 @@ ChartJS.register(
 );
 
 const DisturbancesPanel = ({ results }) => {
+  const chartRefs = useRef([]);
+
   if (!results || !results.t || !results.q) {
     return (
       <div className="tab-content active">
@@ -45,59 +48,156 @@ const DisturbancesPanel = ({ results }) => {
     '#003f5c', '#2f4b7c', '#665191', '#a05195', '#d45087'
   ];
 
-  // Опции для графиков
-  const commonOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: {
-      mode: 'index',
-      intersect: false,
-    },
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          usePointStyle: true,
-          font: {
-            size: 11
-          },
-          padding: 10
-        }
-      }
-    },
-    scales: {
-      x: {
-        title: {
-          display: true,
-          text: 'Время t',
-          font: {
-            size: 12,
-            weight: 'bold'
-          }
-        },
-        grid: {
-          color: 'rgba(0,0,0,0.05)'
-        }
-      },
-      y: {
-        title: {
-          display: true,
-          text: 'Значение возмущения',
-          font: {
-            size: 12,
-            weight: 'bold'
-          }
-        },
-        min: 0,
-        max: 1,
-        grid: {
-          color: 'rgba(0,0,0,0.05)'
-        },
-        ticks: {
-          stepSize: 0.2
-        }
+  // Функция для нахождения максимального значения в данных
+  const getMaxValue = (data) => {
+    if (!Array.isArray(data) || data.length === 0) return 1;
+    const max = Math.max(...data);
+    // Добавляем 10% запаса сверху
+    return Math.ceil(max * 1.1 * 10) / 10 || 1;
+  };
+
+  // Функция для получения опций с адаптивной шкалой Y
+  const getAdaptiveOptions = (index, isMainChart = false) => {
+    let maxY = 1;
+    
+    if (isMainChart) {
+      // Для основного графика находим максимальное значение среди всех возмущений
+      const allMaxValues = results.q.map(trajectory => 
+        Array.isArray(trajectory) ? Math.max(...trajectory) : 0
+      );
+      maxY = Math.max(...allMaxValues, 0.1);
+      maxY = Math.ceil(maxY * 1.1 * 10) / 10 || 1;
+    } else {
+      // Для индивидуального графика находим максимальное значение для конкретного возмущения
+      const trajectory = results.q[index];
+      if (Array.isArray(trajectory)) {
+        maxY = Math.max(...trajectory);
+        maxY = Math.ceil(maxY * 1.1 * 10) / 10 || 1;
       }
     }
+
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      onHover: (event, chartElements) => {
+        const canvas = event.native?.target;
+        if (canvas) {
+          if (chartElements && chartElements.length > 0) {
+            canvas.style.cursor = 'none';
+          } else {
+            canvas.style.cursor = 'default';
+          }
+        }
+      },
+      interaction: {
+        mode: 'index',
+        intersect: false,
+      },
+      plugins: {
+        legend: {
+          display: isMainChart,
+          position: 'top',
+          labels: {
+            usePointStyle: true,
+            font: {
+              size: 14,
+              family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+            },
+            padding: 15
+          }
+        },
+        title: {
+          display: true,
+          text: isMainChart ? 'Динамика всех внешних возмущений' : '',
+          font: {
+            size: isMainChart ? 24 : 0,
+            weight: 'bold',
+            family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+          },
+          color: isMainChart ? '#2c3e50' : disturbanceColors[index],
+          padding: {
+            top: 10,
+            bottom: 30
+          }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.85)',
+          titleFont: {
+            size: 16,
+            family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+            weight: '500'
+          },
+          bodyFont: {
+            size: 15,
+            family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+            weight: '400'
+          },
+          padding: 16,
+          cornerRadius: 8,
+          displayColors: false,
+        }
+      },
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Время t',
+            font: {
+              size: 18,
+              weight: 'bold',
+              family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+            }
+          },
+          grid: {
+            color: 'rgba(0,0,0,0.1)',
+            lineWidth: 1
+          },
+          ticks: {
+            font: {
+              size: 14,
+              family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+            }
+          }
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Значение возмущения',
+            font: {
+              size: 18,
+              weight: 'bold',
+              family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+            }
+          },
+          min: 0,
+          max: maxY,
+          grid: {
+            color: 'rgba(0,0,0,0.1)',
+            lineWidth: 1
+          },
+          ticks: {
+            font: {
+              size: 14,
+              family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+            },
+            callback: function(value) {
+              return value.toFixed(2);
+            },
+            stepSize: maxY > 1 ? maxY / 5 : 0.2
+          }
+        }
+      },
+      elements: {
+        point: {
+          radius: 0, // Убираем точки, оставляем только линии
+          hoverRadius: 6, // Точки появляются только при наведении
+          hitRadius: 10
+        },
+        line: {
+          tension: 0.3 // Плавные линии
+        }
+      }
+    };
   };
 
   const labels = Array.isArray(results.t) ? results.t.map(t => t.toFixed(2)) : [];
@@ -106,15 +206,15 @@ const DisturbancesPanel = ({ results }) => {
   const mainChartData = {
     labels: labels,
     datasets: results.q.map((trajectory, i) => ({
-      label: disturbanceNames[i],
+      label: `q${i + 1}`,
       data: Array.isArray(trajectory) ? trajectory : [],
       borderColor: disturbanceColors[i],
       backgroundColor: disturbanceColors[i] + '20',
-      borderWidth: 2,
-      tension: 0.4,
+      borderWidth: 3,
+      tension: 0.3,
       fill: false,
-      pointRadius: 1,
-      pointHoverRadius: 4
+      pointRadius: 0,
+      pointHoverRadius: 6
     }))
   };
 
@@ -122,15 +222,15 @@ const DisturbancesPanel = ({ results }) => {
   const individualChartsData = results.q.map((trajectory, i) => ({
     labels: labels,
     datasets: [{
-      label: disturbanceNames[i],
+      label: `q${i + 1}`,
       data: Array.isArray(trajectory) ? trajectory : [],
       borderColor: disturbanceColors[i],
-      backgroundColor: disturbanceColors[i] + '40',
-      borderWidth: 3,
-      tension: 0.4,
-      fill: true,
-      pointRadius: 2,
-      pointHoverRadius: 5
+      backgroundColor: disturbanceColors[i] + '20',
+      borderWidth: 4,
+      tension: 0.3,
+      fill: false,
+      pointRadius: 0,
+      pointHoverRadius: 7
     }]
   }));
 
@@ -150,80 +250,57 @@ const DisturbancesPanel = ({ results }) => {
     return { avg, min, max, std };
   };
 
+  // Функция для обработки ссылок на графики
+  const handleChartRef = (index) => (ref) => {
+    chartRefs.current[index] = ref;
+    
+    if (ref?.canvas) {
+      ref.canvas.style.cursor = 'default';
+      ref.canvas.style.pointerEvents = 'auto';
+    }
+  };
+
   return (
     <div className="tab-content active">
-      <div style={{ padding: '20px' }}>
-        <h2 style={{ textAlign: 'center', marginBottom: '30px', color: '#2c3e50' }}>
-          Графики внешних возмущений
-        </h2>
+      <div style={{ padding: '30px' }}>
 
-        <p style={{ 
-          textAlign: 'center', 
-          color: '#666', 
-          marginBottom: '30px',
-          maxWidth: '900px',
-          marginLeft: 'auto',
-          marginRight: 'auto',
-          lineHeight: '1.6'
-        }}>
-          Внешние возмущения — это факторы, которые влияют на компанию извне и не контролируются напрямую её менеджментом. 
-          Эти факторы могут оказывать как положительное, так и отрицательное влияние на различные характеристики компании.
-        </p>
-
-        {/* Основной график всех возмущений */}
+        {/* Основной график - все возмущения */}
         <div style={{ 
-          marginBottom: '40px', 
+          marginBottom: '60px', 
           backgroundColor: 'white', 
-          padding: '25px', 
-          borderRadius: '10px', 
-          boxShadow: '0 2px 15px rgba(0,0,0,0.1)' 
+          padding: '30px', 
+          borderRadius: '15px', 
+          boxShadow: '0 6px 20px rgba(0,0,0,0.1)',
+          border: '3px solid #e9ecef'
         }}>
-          <h3 style={{ 
-            marginBottom: '25px', 
-            textAlign: 'center', 
-            color: '#333',
-            borderBottom: '2px solid #f0f0f0',
-            paddingBottom: '15px'
-          }}>
-            Все внешние возмущения (q1-q5)
-          </h3>
-          <div style={{ height: '450px' }}>
+          <div style={{ height: '600px' }}>
             <Line 
+              ref={handleChartRef('main')}
               data={mainChartData} 
-              options={{
-                ...commonOptions,
-                plugins: {
-                  ...commonOptions.plugins,
-                  title: {
-                    display: true,
-                    text: 'Динамика всех внешних возмущений',
-                    font: {
-                      size: 14,
-                      weight: 'bold'
-                    }
-                  }
-                }
-              }} 
+              options={getAdaptiveOptions(0, true)}
             />
           </div>
         </div>
 
         {/* Индивидуальные графики для каждого возмущения */}
         <div style={{ marginBottom: '40px' }}>
-          <h3 style={{ 
-            marginBottom: '25px', 
+          <h2 style={{ 
+            marginBottom: '40px', 
             textAlign: 'center', 
-            color: '#333',
-            borderBottom: '2px solid #f0f0f0',
-            paddingBottom: '15px'
+            color: '#2c3e50',
+            fontSize: '32px',
+            fontWeight: '700',
+            fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+            borderBottom: '3px solid #f0f0f0',
+            paddingBottom: '20px'
           }}>
             Индивидуальные графики возмущений
-          </h3>
+          </h2>
           
           <div style={{ 
             display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-            gap: '25px'
+            gridTemplateColumns: 'repeat(auto-fit, minmax(600px, 1fr))',
+            gap: '40px'
           }}>
             {results.q.map((_, index) => {
               const stats = calculateStatistics(index);
@@ -231,318 +308,148 @@ const DisturbancesPanel = ({ results }) => {
               return (
                 <div key={index} style={{
                   backgroundColor: 'white',
-                  padding: '20px',
-                  borderRadius: '10px',
-                  boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-                }}>
-                  <h4 style={{ 
-                    marginBottom: '15px', 
-                    color: disturbanceColors[index],
-                    textAlign: 'center'
+                  padding: '30px',
+                  borderRadius: '15px',
+                  boxShadow: '0 6px 20px rgba(0,0,0,0.1)',
+                  border: `3px solid ${disturbanceColors[index] + '30'}`,
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-5px)';
+                  e.currentTarget.style.boxShadow = '0 12px 30px rgba(0,0,0,0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.1)';
+                }}
+                >
+                  {/* Название q1, q2 и т.д. прямо на графике */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: 10,
+                    pointerEvents: 'none'
                   }}>
-                    {disturbanceNames[index]}
-                  </h4>
-                  
-                  <div style={{ height: '300px', marginBottom: '15px' }}>
+                    <div style={{
+                      fontSize: '80px',
+                      fontWeight: '900',
+                      color: disturbanceColors[index] + '20',
+                      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+                      textAlign: 'center',
+                      userSelect: 'none'
+                    }}>
+                      q{index + 1}
+                    </div>
+                  </div>
+
+                  <div style={{ 
+                    height: '500px', 
+                    marginBottom: '25px',
+                    position: 'relative',
+                    zIndex: 20
+                  }}>
                     <Line 
+                      ref={handleChartRef(index)}
                       data={individualChartsData[index]} 
-                      options={{
-                        ...commonOptions,
-                        plugins: {
-                          ...commonOptions.plugins,
-                          legend: {
-                            display: false
-                          }
-                        },
-                        scales: {
-                          ...commonOptions.scales,
-                          y: {
-                            ...commonOptions.scales.y,
-                            min: 0,
-                            max: 1
-                          }
-                        }
-                      }} 
+                      options={getAdaptiveOptions(index, false)}
                     />
                   </div>
                   
                   <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(2, 1fr)',
-                    gap: '10px',
-                    fontSize: '13px'
+                    backgroundColor: '#f8f9fa', 
+                    padding: '20px', 
+                    borderRadius: '12px',
+                    border: '2px solid #e9ecef',
+                    position: 'relative',
+                    zIndex: 20
                   }}>
-                    <div style={{ 
-                      backgroundColor: '#f8f9fa', 
-                      padding: '10px', 
-                      borderRadius: '5px',
-                      textAlign: 'center'
+                    <h4 style={{ 
+                      marginBottom: '15px', 
+                      textAlign: 'center',
+                      fontSize: '20px',
+                      fontWeight: '600',
+                      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+                      color: '#2c3e50'
                     }}>
-                      <div style={{ fontWeight: 'bold', color: '#666' }}>Среднее</div>
-                      <div style={{ fontSize: '16px', fontWeight: 'bold', color: disturbanceColors[index] }}>
-                        {stats.avg.toFixed(3)}
+                      Статистика для q{index + 1}
+                    </h4>
+                    
+                    <div style={{ 
+                      display: 'flex', 
+                      gap: '15px',
+                      width: '100%',
+                      fontSize: '16px'
+                    }}>
+                      <div style={{ 
+                        backgroundColor: 'white', 
+                        width: '100%',
+                        padding: '15px', 
+                        borderRadius: '8px',
+                        textAlign: 'center',
+                        border: '2px solid #e9ecef'
+                      }}>
+                        <div style={{ fontWeight: '600', color: '#666', fontSize: '14px', marginBottom: '5px' }}>
+                          Минимум
+                        </div>
+                        <div style={{ fontSize: '20px', fontWeight: '700', color: '#dc3545' }}>
+                          {stats.min.toFixed(3)}
+                        </div>
+                      </div>
+                      
+                      <div style={{ 
+                        backgroundColor: 'white', 
+                        width: '100%',
+                        padding: '15px', 
+                        borderRadius: '8px',
+                        textAlign: 'center',
+                        border: '2px solid #e9ecef'
+                      }}>
+                        <div style={{ fontWeight: '600', color: '#666', fontSize: '14px', marginBottom: '5px' }}>
+                          Максимум
+                        </div>
+                        <div style={{ fontSize: '20px', fontWeight: '700', color: '#28a745' }}>
+                          {stats.max.toFixed(3)}
+                        </div>
+                      </div>
+                      
+                      <div style={{ 
+                        backgroundColor: 'white', 
+                        width: '100%',
+                        padding: '15px', 
+                        borderRadius: '8px',
+                        textAlign: 'center',
+                        border: '2px solid #e9ecef'
+                      }}>
+                        <div style={{ fontWeight: '600', color: '#666', fontSize: '14px', marginBottom: '5px' }}>
+                          Среднее
+                        </div>
+                        <div style={{ fontSize: '20px', fontWeight: '700', color: '#17a2b8' }}>
+                          {stats.avg.toFixed(3)}
+                        </div>
                       </div>
                     </div>
                     
                     <div style={{ 
-                      backgroundColor: '#f8f9fa', 
-                      padding: '10px', 
-                      borderRadius: '5px',
-                      textAlign: 'center'
+                      marginTop: '20px',
+                      padding: '15px',
+                      backgroundColor: disturbanceColors[index] + '10',
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      color: disturbanceColors[index],
+                      textAlign: 'center',
+                      fontWeight: '600',
+                      border: `1px solid ${disturbanceColors[index] + '30'}`
                     }}>
-                      <div style={{ fontWeight: 'bold', color: '#666' }}>Минимум</div>
-                      <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#dc3545' }}>
-                        {stats.min.toFixed(3)}
-                      </div>
-                    </div>
-                    
-                    <div style={{ 
-                      backgroundColor: '#f8f9fa', 
-                      padding: '10px', 
-                      borderRadius: '5px',
-                      textAlign: 'center'
-                    }}>
-                      <div style={{ fontWeight: 'bold', color: '#666' }}>Максимум</div>
-                      <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#28a745' }}>
-                        {stats.max.toFixed(3)}
-                      </div>
-                    </div>
-                    
-                    <div style={{ 
-                      backgroundColor: '#f8f9fa', 
-                      padding: '10px', 
-                      borderRadius: '5px',
-                      textAlign: 'center'
-                    }}>
-                      <div style={{ fontWeight: 'bold', color: '#666' }}>Отклонение</div>
-                      <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#ffc107' }}>
-                        {stats.std.toFixed(4)}
-                      </div>
+                      {disturbanceNames[index]}
                     </div>
                   </div>
                 </div>
               );
             })}
-          </div>
-        </div>
-
-        {/* Таблица статистики */}
-        <div style={{ 
-          backgroundColor: 'white', 
-          padding: '25px', 
-          borderRadius: '10px', 
-          boxShadow: '0 2px 15px rgba(0,0,0,0.1)' 
-        }}>
-          <h3 style={{ 
-            marginBottom: '20px', 
-            textAlign: 'center', 
-            color: '#333',
-            borderBottom: '2px solid #f0f0f0',
-            paddingBottom: '15px'
-          }}>
-            Статистика внешних возмущений
-          </h3>
-          
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ 
-              width: '100%', 
-              borderCollapse: 'collapse',
-              fontSize: '14px'
-            }}>
-              <thead>
-                <tr style={{ backgroundColor: '#f8f9fa' }}>
-                  <th style={{ 
-                    padding: '12px', 
-                    textAlign: 'left', 
-                    border: '1px solid #dee2e6',
-                    fontWeight: 'bold',
-                    color: '#495057'
-                  }}>
-                    Возмущение
-                  </th>
-                  <th style={{ 
-                    padding: '12px', 
-                    textAlign: 'center', 
-                    border: '1px solid #dee2e6',
-                    fontWeight: 'bold',
-                    color: '#495057'
-                  }}>
-                    Среднее
-                  </th>
-                  <th style={{ 
-                    padding: '12px', 
-                    textAlign: 'center', 
-                    border: '1px solid #dee2e6',
-                    fontWeight: 'bold',
-                    color: '#495057'
-                  }}>
-                    Минимум
-                  </th>
-                  <th style={{ 
-                    padding: '12px', 
-                    textAlign: 'center', 
-                    border: '1px solid #dee2e6',
-                    fontWeight: 'bold',
-                    color: '#495057'
-                  }}>
-                    Максимум
-                  </th>
-                  <th style={{ 
-                    padding: '12px', 
-                    textAlign: 'center', 
-                    border: '1px solid #dee2e6',
-                    fontWeight: 'bold',
-                    color: '#495057'
-                  }}>
-                    Стандартное отклонение
-                  </th>
-                  <th style={{ 
-                    padding: '12px', 
-                    textAlign: 'center', 
-                    border: '1px solid #dee2e6',
-                    fontWeight: 'bold',
-                    color: '#495057'
-                  }}>
-                    Стабильность
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {results.q.map((_, index) => {
-                  const stats = calculateStatistics(index);
-                  const stability = stats.std < 0.1 ? 'Высокая' : 
-                                 stats.std < 0.2 ? 'Средняя' : 'Низкая';
-                  const stabilityColor = stats.std < 0.1 ? '#28a745' : 
-                                       stats.std < 0.2 ? '#ffc107' : '#dc3545';
-                  
-                  return (
-                    <tr key={index} style={{ 
-                      borderBottom: '1px solid #dee2e6',
-                      backgroundColor: index % 2 === 0 ? '#fff' : '#f8f9fa'
-                    }}>
-                      <td style={{ 
-                        padding: '12px', 
-                        border: '1px solid #dee2e6',
-                        fontWeight: 'bold',
-                        color: disturbanceColors[index]
-                      }}>
-                        {disturbanceNames[index]}
-                      </td>
-                      <td style={{ 
-                        padding: '12px', 
-                        textAlign: 'center', 
-                        border: '1px solid #dee2e6',
-                        fontWeight: 'bold'
-                      }}>
-                        {stats.avg.toFixed(4)}
-                      </td>
-                      <td style={{ 
-                        padding: '12px', 
-                        textAlign: 'center', 
-                        border: '1px solid #dee2e6',
-                        color: '#dc3545',
-                        fontWeight: 'bold'
-                      }}>
-                        {stats.min.toFixed(4)}
-                      </td>
-                      <td style={{ 
-                        padding: '12px', 
-                        textAlign: 'center', 
-                        border: '1px solid #dee2e6',
-                        color: '#28a745',
-                        fontWeight: 'bold'
-                      }}>
-                        {stats.max.toFixed(4)}
-                      </td>
-                      <td style={{ 
-                        padding: '12px', 
-                        textAlign: 'center', 
-                        border: '1px solid #dee2e6'
-                      }}>
-                        {stats.std.toFixed(4)}
-                      </td>
-                      <td style={{ 
-                        padding: '12px', 
-                        textAlign: 'center', 
-                        border: '1px solid #dee2e6',
-                        color: stabilityColor,
-                        fontWeight: 'bold'
-                      }}>
-                        {stability}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Описание возмущений */}
-        <div style={{ 
-          marginTop: '30px', 
-          backgroundColor: '#e8f4fd', 
-          padding: '20px',
-          borderRadius: '10px',
-          border: '1px solid #b6d4fe'
-        }}>
-          <h4 style={{ marginBottom: '15px', color: '#084298' }}>
-            Описание внешних возмущений:
-          </h4>
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '15px'
-          }}>
-            <div style={{ backgroundColor: 'white', padding: '15px', borderRadius: '8px' }}>
-              <h5 style={{ color: disturbanceColors[0], marginBottom: '8px' }}>
-                q1 - Макроэкономические факторы
-              </h5>
-              <p style={{ fontSize: '14px', lineHeight: '1.5', color: '#555' }}>
-                Инфляция, курс валют, ключевая ставка ЦБ, ВВП, уровень безработицы, 
-                экономические циклы, международные санкции.
-              </p>
-            </div>
-            
-            <div style={{ backgroundColor: 'white', padding: '15px', borderRadius: '8px' }}>
-              <h5 style={{ color: disturbanceColors[1], marginBottom: '8px' }}>
-                q2 - Рыночные колебания
-              </h5>
-              <p style={{ fontSize: '14px', lineHeight: '1.5', color: '#555' }}>
-                Колебания спроса, изменение цен конкурентов, появление новых игроков на рынке, 
-                изменение цен на сырье и материалы, сезонные колебания.
-              </p>
-            </div>
-            
-            <div style={{ backgroundColor: 'white', padding: '15px', borderRadius: '8px' }}>
-              <h5 style={{ color: disturbanceColors[2], marginBottom: '8px' }}>
-                q3 - Технологические изменения
-              </h5>
-              <p style={{ fontSize: '14px', lineHeight: '1.5', color: '#555' }}>
-                Появление новых технологий, устаревание оборудования, цифровизация, 
-                автоматизация процессов, кибербезопасность, инновации в отрасли.
-              </p>
-            </div>
-            
-            <div style={{ backgroundColor: 'white', padding: '15px', borderRadius: '8px' }}>
-              <h5 style={{ color: disturbanceColors[3], marginBottom: '8px' }}>
-                q4 - Регуляторные изменения
-              </h5>
-              <p style={{ fontSize: '14px', lineHeight: '1.5', color: '#555' }}>
-                Изменения в законодательстве, новые налоги и пошлины, экологические стандарты, 
-                требования к качеству продукции, трудовое законодательство.
-              </p>
-            </div>
-            
-            <div style={{ backgroundColor: 'white', padding: '15px', borderRadius: '8px' }}>
-              <h5 style={{ color: disturbanceColors[4], marginBottom: '8px' }}>
-                q5 - Социальные факторы
-              </h5>
-              <p style={{ fontSize: '14px', lineHeight: '1.5', color: '#555' }}>
-                Демографические изменения, культурные тренды, уровень образования, 
-                социальная ответственность, здоровый образ жизни, экологическая сознательность.
-              </p>
-            </div>
           </div>
         </div>
       </div>

@@ -1,5 +1,4 @@
-// components/RadarPanel.jsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Chart as ChartJS,
   RadialLinearScale,
@@ -8,7 +7,6 @@ import {
   Filler,
   Tooltip,
   Legend,
-  Title,
 } from 'chart.js';
 import { Radar } from 'react-chartjs-2';
 
@@ -18,14 +16,13 @@ ChartJS.register(
   LineElement,
   Filler,
   Tooltip,
-  Legend,
-  Title
+  Legend
 );
 
 const RadarPanel = ({ results, inputData }) => {
-  const [time, setTime] = useState(0.5);
   const [minValues, setMinValues] = useState(new Array(15).fill(0));
   const [maxValues, setMaxValues] = useState(new Array(15).fill(1));
+  const chartRefs = useRef([]);
 
   useEffect(() => {
     if (inputData && inputData.l_params) {
@@ -54,18 +51,25 @@ const RadarPanel = ({ results, inputData }) => {
     "L15 - Экологичность"
   ];
 
+  // Фиксированные значения времени для 6 графиков
+  const timeValues = [0, 0.2, 0.4, 0.6, 0.8, 1.0];
+
   if (!results || !results.t || !results.L) {
     return (
       <div className="tab-content active">
-        <div style={{ padding: '20px', textAlign: 'center' }}>
-          <h3>Лепестковая диаграмма характеристик</h3>
-          <p>Нет данных для отображения. Выполните расчеты на вкладке "Ввод данных".</p>
+        <div style={{ padding: '40px', textAlign: 'center' }}>
+          <h2 style={{ fontSize: '28px', marginBottom: '20px', color: '#2c3e50' }}>
+            Лепестковые диаграммы характеристик
+          </h2>
+          <p style={{ fontSize: '18px', color: '#666' }}>
+            Нет данных для отображения. Выполните расчеты на вкладке "Ввод данных".
+          </p>
         </div>
       </div>
     );
   }
 
-  // Находим индекс времени
+  // Находим индекс времени в массиве результатов
   const findTimeIndex = (targetTime) => {
     if (!Array.isArray(results.t) || results.t.length === 0) return 0;
     
@@ -83,311 +87,255 @@ const RadarPanel = ({ results, inputData }) => {
     return closestIndex;
   };
 
-  const timeIndex = findTimeIndex(time);
-  const currentValues = results.L.map((trajectory, i) => {
-    if (!Array.isArray(trajectory) || trajectory.length <= timeIndex) {
-      return minValues[i] || 0;
-    }
-    const value = trajectory[timeIndex];
-    return isFinite(value) ? value : minValues[i] || 0;
-  });
+  // Получаем значения для конкретного времени
+  const getValuesForTime = (timeValue) => {
+    const timeIndex = findTimeIndex(timeValue);
+    return results.L.map((trajectory, i) => {
+      if (!Array.isArray(trajectory) || trajectory.length <= timeIndex) {
+        return minValues[i] || 0;
+      }
+      const value = trajectory[timeIndex];
+      return isFinite(value) ? value : minValues[i] || 0;
+    });
+  };
+
+  // Данные для каждого графика
+  const getRadarDataForTime = (timeValue) => {
+    const currentValues = getValuesForTime(timeValue);
+    
+    return {
+      labels: characteristicNames.map(name => {
+        const shortName = name.split(' - ')[1] || name;
+        return shortName;
+      }),
+      datasets: [
+        {
+          label: 'Минимальные значения',
+          data: minValues,
+          backgroundColor: 'rgba(255, 99, 132, 0.15)',
+          borderColor: 'rgba(255, 99, 132, 0.4)',
+          pointBackgroundColor: 'rgba(255, 99, 132, 0.4)',
+          pointBorderColor: '#fff',
+          borderWidth: 1.5,
+          pointRadius: 1.5,
+          pointHoverRadius: 2,
+          fill: true
+        },
+        {
+          label: 'Максимальные значения',
+          data: maxValues,
+          backgroundColor: 'rgba(54, 162, 235, 0.15)',
+          borderColor: 'rgba(54, 162, 235, 0.4)',
+          pointBackgroundColor: 'rgba(54, 162, 235, 0.4)',
+          pointBorderColor: '#fff',
+          borderWidth: 1.5,
+          pointRadius: 1.5,
+          pointHoverRadius: 2,
+          fill: true
+        },
+        {
+          label: `t = ${timeValue.toFixed(1)}`,
+          data: currentValues,
+          backgroundColor: 'rgba(75, 192, 192, 0.25)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          pointBackgroundColor: 'rgba(75, 192, 192, 1)',
+          pointBorderColor: '#fff',
+          borderWidth: 3,
+          pointRadius: 4,
+          pointHoverRadius: 5,
+          fill: false
+        }
+      ]
+    };
+  };
 
   const radarOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    onHover: (event, chartElements) => {
+      const canvas = event.native?.target;
+      if (canvas) {
+        if (chartElements && chartElements.length > 0) {
+          canvas.style.cursor = 'none';
+        } else {
+          canvas.style.cursor = 'default';
+        }
+      }
+    },
     scales: {
       r: {
         angleLines: {
           display: true,
-          color: 'rgba(0, 0, 0, 0.1)',
+          color: 'rgba(0, 0, 0, 0.2)',
+          lineWidth: 1.5
         },
         grid: {
-          color: 'rgba(0, 0, 0, 0.1)',
+          color: 'rgba(0, 0, 0, 0.15)',
+          lineWidth: 1.5
         },
         suggestedMin: 0,
         suggestedMax: 1,
         ticks: {
+          display: true,
           stepSize: 0.2,
-          backdropColor: 'transparent',
-          showLabelBackdrop: false,
           font: {
-            size: 10
-          }
+            size: 16,
+            family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+            weight: '500'
+          },
+          color: '#444',
+          backdropColor: 'transparent',
+          z: 10,
+          padding: 8
         },
         pointLabels: {
           font: {
-            size: 11
+            size: 18,
+            family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+            weight: '600'
           },
-          color: '#333'
+          color: '#2c3e50',
+          padding: 20,
+          backdropColor: 'rgba(255, 255, 255, 0.9)',
+          borderRadius: 6
         }
       }
     },
     plugins: {
       legend: {
+        display: true,
         position: 'top',
         labels: {
           usePointStyle: true,
           font: {
-            size: 11
+            size: 18,
+            family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+            weight: '500'
           },
-          padding: 15
+          padding: 20,
+          boxWidth: 16,
+          boxHeight: 16
+        },
+        onHover: () => {
+          return;
         }
       },
       tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.85)',
+        titleFont: {
+          size: 16,
+          family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+          weight: '500'
+        },
+        bodyFont: {
+          size: 15,
+          family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+          weight: '400'
+        },
+        padding: 16,
+        cornerRadius: 8,
+        displayColors: false,
         callbacks: {
           label: (context) => {
-            const label = context.dataset.label || '';
             const value = context.parsed.r.toFixed(3);
             const charIndex = context.dataIndex;
             const charName = characteristicNames[charIndex]?.split(' - ')[1] || `L${charIndex + 1}`;
             const min = minValues[charIndex] || 0;
             const max = maxValues[charIndex] || 1;
-            return `${label}: ${charName} = ${value} (min: ${min.toFixed(2)}, max: ${max.toFixed(2)})`;
+            return `${charName}: ${value} (min: ${min.toFixed(2)}, max: ${max.toFixed(2)})`;
           }
         }
       }
+    },
+    elements: {
+      line: {
+        tension: 0
+      },
+      point: {
+        hoverBorderColor: '#fff',
+        hoverBorderWidth: 3
+      }
+    },
+    interaction: {
+      intersect: true,
+      mode: 'nearest'
+    },
+    hover: {
+      mode: 'nearest',
+      intersect: true
     }
   };
 
-  const radarData = {
-    labels: characteristicNames.map(name => {
-      const shortName = name.split(' - ')[1] || name;
-      return shortName.length > 20 ? shortName.substring(0, 20) + '...' : shortName;
-    }),
-    datasets: [
-      {
-        label: 'Минимальные значения',
-        data: minValues,
-        backgroundColor: 'rgba(255, 99, 132, 0.1)',
-        borderColor: 'rgba(255, 99, 132, 0.3)',
-        pointBackgroundColor: 'rgba(255, 99, 132, 0.3)',
-        pointBorderColor: '#fff',
-        borderWidth: 1,
-        pointRadius: 1,
-        fill: true
-      },
-      {
-        label: 'Максимальные значения',
-        data: maxValues,
-        backgroundColor: 'rgba(54, 162, 235, 0.1)',
-        borderColor: 'rgba(54, 162, 235, 0.3)',
-        pointBackgroundColor: 'rgba(54, 162, 235, 0.3)',
-        pointBorderColor: '#fff',
-        borderWidth: 1,
-        pointRadius: 1,
-        fill: true
-      },
-      {
-        label: `Текущие значения (t = ${time.toFixed(2)})`,
-        data: currentValues,
-        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-        borderColor: 'rgba(75, 192, 192, 1)',
-        pointBackgroundColor: 'rgba(75, 192, 192, 1)',
-        pointBorderColor: '#fff',
-        pointHoverBackgroundColor: '#fff',
-        pointHoverBorderColor: 'rgba(75, 192, 192, 1)',
-        borderWidth: 2,
-        pointRadius: 3,
-        fill: false
-      }
-    ]
+  const handleChartRef = (index) => (ref) => {
+    chartRefs.current[index] = ref;
+    
+    if (ref?.canvas) {
+      ref.canvas.style.cursor = 'default';
+      ref.canvas.style.pointerEvents = 'auto';
+    }
   };
 
   return (
     <div className="tab-content active">
-      <div style={{ padding: '20px' }}>
-        <div className="radar-header" style={{ marginBottom: '30px' }}>
-          <h2 style={{ textAlign: 'center', marginBottom: '15px' }}>
-            Лепестковая диаграмма характеристик компании
-          </h2>
-          
-          <div className="radar-controls" style={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            alignItems: 'center',
-            gap: '20px',
-            marginBottom: '20px',
-            flexWrap: 'wrap'
-          }}>
-            <div className="time-control" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <label htmlFor="time-input" style={{ fontWeight: '500', color: '#333' }}>
-                Время t:
-              </label>
-              <input
-                type="range"
-                id="time-slider"
-                min="0"
-                max="1"
-                step="0.01"
-                value={time}
-                onChange={(e) => setTime(parseFloat(e.target.value))}
-                style={{ width: '200px' }}
-              />
-              <input
-                type="number"
-                id="time-input"
-                min="0"
-                max="1"
-                step="0.01"
-                value={time}
-                onChange={(e) => {
-                  const newTime = parseFloat(e.target.value);
-                  if (!isNaN(newTime) && newTime >= 0 && newTime <= 1) {
-                    setTime(newTime);
-                  }
-                }}
-                style={{ 
-                  width: '80px',
-                  padding: '5px 10px',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  textAlign: 'center'
-                }}
-              />
-            </div>
-          </div>
-          
-          <p style={{ 
-            textAlign: 'center', 
-            color: '#666', 
-            maxWidth: '800px', 
-            margin: '0 auto 20px',
-            lineHeight: '1.5',
-            fontSize: '14px'
-          }}>
-            Зеленые области показывают допустимые диапазоны значений характеристик. 
-            Красная область - минимальные значения, синяя - максимальные. 
-            Темно-зеленая линия показывает текущие значения в выбранный момент времени.
-          </p>
-        </div>
-
-        <div style={{ height: '600px', marginBottom: '30px' }}>
-          <Radar data={radarData} options={radarOptions} />
-        </div>
-
-        <div style={{ 
-          marginTop: '30px', 
-          backgroundColor: '#f8f9fa', 
-          padding: '20px',
-          borderRadius: '10px',
-          border: '1px solid #e9ecef'
+      <div style={{ 
+        padding: '20px 40px 40px 40px',
+        maxWidth: '100%',
+        width: '100%',
+        boxSizing: 'border-box'
+      }}>
+        
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '50px',
+          width: '100%',
+          maxWidth: '100%',
+          margin: '0 auto'
         }}>
-          <h4 style={{ marginBottom: '15px', color: '#2c3e50' }}>
-            Статистика характеристик при t = {time.toFixed(2)}
-          </h4>
-          <div style={{ 
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-            gap: '15px'
-          }}>
-            {currentValues.map((value, index) => {
-              const min = minValues[index] || 0;
-              const max = maxValues[index] || 1;
-              const percentage = ((value - min) / (max - min || 1)) * 100;
-              const normalizedPercentage = Math.min(100, Math.max(0, percentage));
-              
-              let status = '';
-              let statusColor = '';
-              
-              if (normalizedPercentage >= 80) {
-                status = 'Отличный';
-                statusColor = '#28a745';
-              } else if (normalizedPercentage >= 50) {
-                status = 'Хороший';
-                statusColor = '#17a2b8';
-              } else if (normalizedPercentage >= 30) {
-                status = 'Средний';
-                statusColor = '#ffc107';
-              } else {
-                status = 'Низкий';
-                statusColor = '#dc3545';
-              }
-              
-              return (
-                <div key={index} style={{
-                  backgroundColor: 'white',
-                  padding: '15px',
-                  borderRadius: '8px',
-                  border: '1px solid #e9ecef',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-                }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between',
-                    marginBottom: '10px'
-                  }}>
-                    <span style={{ fontWeight: 'bold', color: '#333' }}>
-                      {characteristicNames[index].split(' - ')[1]}
-                    </span>
-                    <span style={{ 
-                      fontWeight: 'bold', 
-                      color: statusColor,
-                      fontSize: '14px'
-                    }}>
-                      {status}
-                    </span>
-                  </div>
-                  
-                  <div style={{ marginBottom: '10px' }}>
-                    <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between',
-                      fontSize: '12px',
-                      color: '#666',
-                      marginBottom: '5px'
-                    }}>
-                      <span>Значение: {value.toFixed(3)}</span>
-                      <span>{normalizedPercentage.toFixed(1)}% от диапазона</span>
-                    </div>
-                    
-                    <div style={{ 
-                      width: '100%', 
-                      backgroundColor: '#e9ecef',
-                      borderRadius: '4px',
-                      overflow: 'hidden',
-                      height: '20px',
-                      position: 'relative'
-                    }}>
-                      <div style={{ 
-                        position: 'absolute',
-                        left: `${min * 100}%`,
-                        width: `${(max - min) * 100}%`,
-                        height: '100%',
-                        backgroundColor: '#dee2e6',
-                        borderLeft: '1px solid #adb5bd',
-                        borderRight: '1px solid #adb5bd'
-                      }} />
-                      
-                      <div style={{ 
-                        width: `${normalizedPercentage}%`,
-                        height: '100%',
-                        backgroundColor: statusColor,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'white',
-                        fontSize: '11px',
-                        fontWeight: 'bold'
-                      }}>
-                        {normalizedPercentage >= 15 ? `${normalizedPercentage.toFixed(0)}%` : ''}
-                      </div>
-                    </div>
-                    
-                    <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between',
-                      fontSize: '11px',
-                      color: '#666',
-                      marginTop: '5px'
-                    }}>
-                      <span>min: {min.toFixed(2)}</span>
-                      <span>max: {max.toFixed(2)}</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          {timeValues.map((timeValue, index) => (
+            <div key={timeValue} style={{
+              backgroundColor: 'white',
+              padding: '30px',
+              borderRadius: '15px',
+              border: '3px solid #e9ecef',
+              boxShadow: '0 6px 20px rgba(0,0,0,0.1)',
+              width: '100%',
+              position: 'relative',
+              transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+              overflow: 'hidden'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = '0 12px 30px rgba(0,0,0,0.15)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.1)';
+            }}
+            >
+              <h2 style={{
+                textAlign: 'center',
+                marginBottom: '25px',
+                color: '#2c3e50',
+                fontSize: '32px',
+                fontWeight: '700',
+                fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+                paddingBottom: '15px',
+                borderBottom: '3px solid #f0f0f0'
+              }}>
+                Время t = {timeValue.toFixed(1)}
+              </h2>
+              <div style={{ 
+                height: '550px',
+                width: '100%',
+                position: 'relative'
+              }}>
+                <Radar 
+                  ref={handleChartRef(index)}
+                  data={getRadarDataForTime(timeValue)} 
+                  options={radarOptions} 
+                />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
