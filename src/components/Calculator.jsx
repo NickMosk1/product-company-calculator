@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import InputsPanel from './InputsPanel';
 import GraphsPanel from './GraphsPanel';
 import RadarPanel from './RadarPanel';
-import { calculateResults } from '../services/calculationService';
+import { calculateResults } from '../services/mathModel';
 
 const Calculator = () => {
   const [activeTab, setActiveTab] = useState('inputs');
@@ -12,7 +12,7 @@ const Calculator = () => {
   const characteristicNames = [
     "Остаток денежных средств",
     "Выручка",
-    "Прибыль", 
+    "Прибыль",
     "Активы",
     "Численность",
     "Конкурентоспособность",

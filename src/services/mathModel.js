@@ -1,4 +1,3 @@
-// services/mathModel.js
 class ProductCompanyModelJS {
     constructor() {
         // Параметры L_i: min, init, max (индексы 0-14 для L1-L15)
@@ -42,7 +41,7 @@ class ProductCompanyModelJS {
     
     compute_q_normalized(k, t, q_global_max) {
         const raw_value = this.compute_q_raw(k, t);
-        return q_global_max > 0 
+        return q_global_max > 0
             ? Math.max(0.0, Math.min(1.0, raw_value / q_global_max))
             : 0.0;
     }

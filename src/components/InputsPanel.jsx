@@ -7,6 +7,13 @@ const InputsPanel = ({ onCalculate, isCalculating }) => {
   const [lParams, setLParams] = useState({});
   const [isValid, setIsValid] = useState(false);
 
+  // Ключи для localStorage
+  const STORAGE_KEYS = {
+    fCoeffs: 'math_model_f_coeffs',
+    qCoeffs: 'math_model_q_coeffs',
+    lParams: 'math_model_l_params',
+  };
+
   const generateFArguments = useCallback(() => {
     const args = {};
     
@@ -35,8 +42,70 @@ const InputsPanel = ({ onCalculate, isCalculating }) => {
 
   const [fArguments] = useState(generateFArguments());
 
+  // Функция загрузки из localStorage
+  const loadFromStorage = () => {
+    try {
+      const savedFCoeffs = localStorage.getItem(STORAGE_KEYS.fCoeffs);
+      const savedQCoeffs = localStorage.getItem(STORAGE_KEYS.qCoeffs);
+      const savedLParams = localStorage.getItem(STORAGE_KEYS.lParams);
+
+      if (savedFCoeffs) {
+        setFCoeffs(JSON.parse(savedFCoeffs));
+      }
+      if (savedQCoeffs) {
+        setQCoeffs(JSON.parse(savedQCoeffs));
+      }
+      if (savedLParams) {
+        setLParams(JSON.parse(savedLParams));
+      }
+
+      return {
+        hasFCoeffs: !!savedFCoeffs,
+        hasQCoeffs: !!savedQCoeffs,
+        hasLParams: !!savedLParams,
+      };
+    } catch (error) {
+      console.error('Ошибка при загрузке из localStorage:', error);
+      return { hasFCoeffs: false, hasQCoeffs: false, hasLParams: false };
+    }
+  };
+
+  // Функция сохранения в localStorage
+  const saveToStorage = () => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.fCoeffs, JSON.stringify(fCoeffs));
+      localStorage.setItem(STORAGE_KEYS.qCoeffs, JSON.stringify(qCoeffs));
+      localStorage.setItem(STORAGE_KEYS.lParams, JSON.stringify(lParams));
+      console.log('Данные сохранены в localStorage');
+    } catch (error) {
+      console.error('Ошибка при сохранении в localStorage:', error);
+    }
+  };
+
+  // Автосохранение при изменении данных
   useEffect(() => {
-    initializeData();
+    const hasData = Object.keys(fCoeffs).length > 0 && 
+                    Object.keys(qCoeffs).length > 0 && 
+                    Object.keys(lParams).length > 0;
+    
+    if (hasData) {
+      // Используем debounce для автосохранения
+      const timeoutId = setTimeout(() => {
+        saveToStorage();
+      }, 500); // Сохраняем через 500 мс после последнего изменения
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [fCoeffs, qCoeffs, lParams]);
+
+  useEffect(() => {
+    // При монтировании проверяем, есть ли сохраненные данные
+    const savedData = loadFromStorage();
+    
+    // Если нет сохраненных данных, инициализируем пустыми значениями
+    if (!savedData.hasFCoeffs && !savedData.hasQCoeffs && !savedData.hasLParams) {
+      initializeData();
+    }
   }, []);
 
   const initializeData = () => {
@@ -142,7 +211,7 @@ const InputsPanel = ({ onCalculate, isCalculating }) => {
       const min = Math.random() * 0.3;
       const init = min + Math.random() * (0.7 - min);
       const max = init + Math.random() * (1 - init);
-      
+
       newLParams[`l${i}_min`] = min.toFixed(2);
       newLParams[`l${i}_init`] = init.toFixed(2);
       newLParams[`l${i}_max`] = max.toFixed(2);
@@ -161,6 +230,7 @@ const InputsPanel = ({ onCalculate, isCalculating }) => {
       num_points: 100
     };
 
+    saveToStorage();
     onCalculate(inputData);
   };
 
@@ -441,6 +511,7 @@ const InputsPanel = ({ onCalculate, isCalculating }) => {
               >
                 Нормальные значения
               </button>
+              
               <div className={`validation-status ${isValid ? 'valid' : ''}`} id="validation-status">
                 <span className="status-icon">{isValid ? '✓' : '⚠'}</span>
                 <span className="status-text">

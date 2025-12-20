@@ -9,6 +9,7 @@ body {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     padding: 20px;
+    font-size: 16px; /* Увеличен базовый размер шрифта */
 }
 
 .container {
@@ -26,7 +27,8 @@ h1 {
     background: linear-gradient(135deg, #2c3e50, #34495e);
     color: white;
     margin: 0;
-    font-size: 2.2em;
+    font-size: 2.5em; /* Увеличено с 2.2em */
+    font-weight: 600;
 }
 
 .tabs {
@@ -41,7 +43,7 @@ h1 {
     border: none;
     background: none;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 18px; /* Увеличено с 16px */
     font-weight: 500;
     color: #6c757d;
     transition: all 0.3s ease;
@@ -62,7 +64,7 @@ h1 {
 .tab-content {
     display: none;
     padding: 20px;
-    min-height: 840px;
+    min-height: 940px;
 }
 
 .tab-content.active {
@@ -87,8 +89,9 @@ h1 {
 .widget h3 {
     margin-bottom: 15px;
     color: #2c3e50;
-    font-size: 1.2em;
+    font-size: 1.4em; /* Увеличено с 1.2em */
     text-align: center;
+    font-weight: 600;
 }
 
 .control-widget {
@@ -110,16 +113,16 @@ h1 {
 .control-buttons {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 20px; /* Увеличено */
     margin-bottom: auto;
 }
 
 .btn {
-    padding: 15px 25px;
+    padding: 18px 30px; /* Увеличено */
     border: none;
     border-radius: 8px;
-    font-size: 16px;
-    font-weight: 500;
+    font-size: 18px; /* Увеличено с 16px */
+    font-weight: 600; /* Сделано жирнее */
     cursor: pointer;
     transition: all 0.3s ease;
     width: 100%;
@@ -145,6 +148,7 @@ h1 {
 .btn.secondary {
     background: #6c757d;
     color: white;
+    font-size: 18px; /* Добавлено для единообразия */
 }
 
 .btn.secondary:hover {
@@ -152,10 +156,41 @@ h1 {
     transform: translateY(-2px);
 }
 
+/* Стили для новой кнопки */
+.btn.btn-info {
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+    border: none;
+    padding: 18px 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    box-shadow: 0 2px 5px rgba(106, 17, 203, 0.3);
+}
+
+.btn.btn-info:hover:not(:disabled) {
+    background: linear-gradient(135deg, #5a0db5 0%, #1c67e8 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(106, 17, 203, 0.4);
+}
+
+.btn.btn-info:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(106, 17, 203, 0.3);
+}
+
+.btn.btn-info:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 .validation-status {
     display: flex;
     align-items: center;
-    padding: 12px;
+    padding: 15px; /* Увеличено */
     border-radius: 8px;
     background: #fff3cd;
     border: 1px solid #ffeaa7;
@@ -163,13 +198,14 @@ h1 {
 }
 
 .status-icon {
-    margin-right: 10px;
-    font-size: 18px;
+    margin-right: 12px; /* Увеличено */
+    font-size: 22px; /* Увеличено */
 }
 
 .status-text {
     color: #856404;
-    font-size: 14px;
+    font-size: 16px; /* Увеличено с 14px */
+    font-weight: 500;
 }
 
 .validation-status.valid {
@@ -186,21 +222,22 @@ h1 {
 }
 
 .scrollable-list {
-    height: 300px;
+    height: 350px; /* Увеличено */
     overflow-y: auto;
     border: 1px solid #ddd;
     border-radius: 5px;
     background: white;
-    padding: 10px;
+    padding: 15px; /* Увеличено */
 }
 
 .polynomial-item, .l-param-item {
-    margin-bottom: 10px;
-    padding: 8px;
+    margin-bottom: 12px; /* Увеличено */
+    padding: 12px; /* Увеличено */
     background: white;
     border-radius: 5px;
     border: 1px solid #e9ecef;
-    font-size: 14px;
+    font-size: 16px; /* Увеличено с 14px */
+    line-height: 1.4;
 }
 
 .polynomial-item:hover, .l-param-item:hover {
@@ -208,32 +245,32 @@ h1 {
 }
 
 .coefficient-input {
-    width: 60px;
-    margin: 0 5px;
-    padding: 4px;
+    width: 70px; /* Увеличено */
+    margin: 0 6px; /* Увеличено */
+    padding: 6px; /* Увеличено */
     border: 1px solid #ced4da;
-    border-radius: 3px;
+    border-radius: 4px;
     text-align: center;
-    font-size: 12px;
+    font-size: 16px; /* Увеличено с 12px */
 }
 
 .coefficient-input:focus {
     outline: none;
     border-color: #007bff;
-    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.25); /* Увеличено */
 }
 
 /* Стили для параметров L */
 .l-params-container {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr 1fr;
-    gap: 10px;
-    height: 300px;
+    gap: 15px; /* Увеличено */
+    height: 350px; /* Увеличено */
     overflow-y: auto;
     border: 1px solid #ddd;
     border-radius: 5px;
     background: white;
-    padding: 10px;
+    padding: 15px; /* Увеличено */
 }
 
 .characteristics-names {
@@ -243,28 +280,29 @@ h1 {
 
 .characteristics-names h4 {
     text-align: center;
-    margin-bottom: 10px;
+    margin-bottom: 15px; /* Увеличено */
     color: #495057;
-    height: 40px;
+    height: 50px; /* Увеличено */
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 18px; /* Увеличено с 14px */
+    font-weight: 600;
     position: sticky;
-    top: -10px;
+    top: -15px; /* Скорректировано */
     background: white;
     z-index: 1;
 }
 
 .characteristic-name-item {
-    margin-bottom: 10px;
-    padding: 8px;
+    margin-bottom: 12px; /* Увеличено */
+    padding: 12px; /* Увеличено */
     background: white;
     border-radius: 5px;
     border: 1px solid #e9ecef;
-    font-size: 12px;
+    font-size: 15px; /* Увеличено с 12px */
     line-height: 1.3;
-    height: 40px;
+    height: 50px; /* Увеличено */
     display: flex;
     align-items: center;
     font-weight: 500;
@@ -278,55 +316,56 @@ h1 {
 
 .params-column h4 {
     text-align: center;
-    margin-bottom: 10px;
+    margin-bottom: 15px; /* Увеличено */
     color: #495057;
-    height: 40px;
+    height: 50px; /* Увеличено */
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 18px; /* Увеличено с 14px */
+    font-weight: 600;
     position: sticky;
-    top: -10px;
+    top: -15px; /* Скорректировано */
     background: white;
     z-index: 1;
 }
 
 .l-param-item {
-    margin-bottom: 10px;
-    padding: 8px;
+    margin-bottom: 12px; /* Увеличено */
+    padding: 12px; /* Увеличено */
     background: white;
     border-radius: 5px;
     border: 1px solid #e9ecef;
-    font-size: 14px;
-    height: 40px;
+    font-size: 16px; /* Увеличено с 14px */
+    height: 50px; /* Увеличено */
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .l-param-item input {
-    width: 50px;
-    margin: 0 2px;
-    padding: 4px;
+    width: 70px; /* Увеличено с 50px */
+    margin: 0 4px; /* Увеличено */
+    padding: 6px; /* Увеличено */
     border: 1px solid #ced4da;
-    border-radius: 3px;
+    border-radius: 4px;
     text-align: center;
-    font-size: 12px;
+    font-size: 16px; /* Увеличено с 12px */
 }
 
 .l-param-item input:focus {
     outline: none;
     border-color: #007bff;
-    box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.25); /* Увеличено */
 }
 
 /* Стили для графиков */
 .chart-container {
     position: relative;
-    height: 500px;
+    height: 550px; /* Увеличено */
     background: white;
     border-radius: 10px;
-    padding: 20px;
+    padding: 25px; /* Увеличено */
     border: 2px solid #e9ecef;
 }
 
@@ -334,29 +373,29 @@ h1 {
 .radar-charts-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-    margin-top: 20px;
+    gap: 25px; /* Увеличено */
+    margin-top: 25px; /* Увеличено */
 }
 
 .radar-chart-wrapper {
     background: white;
     border-radius: 8px;
-    padding: 15px;
+    padding: 20px; /* Увеличено */
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     border: 1px solid #e9ecef;
 }
 
 .radar-chart-wrapper h4 {
-    margin: 0 0 15px 0;
+    margin: 0 0 20px 0; /* Увеличено */
     text-align: center;
     color: #2c3e50;
-    font-size: 1.1em;
+    font-size: 1.3em; /* Увеличено */
     font-weight: 600;
 }
 
 .radar-chart-container {
     position: relative;
-    height: 300px;
+    height: 350px; /* Увеличено */
     width: 100%;
 }
 
@@ -366,19 +405,20 @@ h1 {
 }
 
 .radar-header {
-    margin-bottom: 20px;
+    margin-bottom: 25px; /* Увеличено */
     text-align: center;
 }
 
 .radar-header h3 {
     color: #2c3e50;
-    font-size: 1.5em;
-    margin-bottom: 10px;
+    font-size: 1.8em; /* Увеличено */
+    margin-bottom: 15px; /* Увеличено */
+    font-weight: 600;
 }
 
 .radar-description {
     color: #6c757d;
-    font-size: 14px;
+    font-size: 18px; /* Увеличено с 14px */
     max-width: 800px;
     margin: 0 auto;
     line-height: 1.5;
@@ -387,7 +427,7 @@ h1 {
 /* Стили для скроллбаров */
 .scrollable-list::-webkit-scrollbar,
 .l-params-container::-webkit-scrollbar {
-    width: 8px;
+    width: 10px; /* Увеличено */
 }
 
 .scrollable-list::-webkit-scrollbar-track,
@@ -426,8 +466,23 @@ h1 {
 }
 
 @media (max-width: 768px) {
+    body {
+        font-size: 14px;
+        padding: 10px;
+    }
+    
+    h1 {
+        font-size: 2em; /* Адаптировано для мобильных */
+        padding: 20px;
+    }
+    
     .tabs {
         flex-direction: column;
+    }
+    
+    .tab-button {
+        padding: 15px;
+        font-size: 16px;
     }
     
     .container {
@@ -435,67 +490,127 @@ h1 {
         border-radius: 10px;
     }
     
-    h1 {
-        font-size: 1.8em;
-        padding: 20px;
-    }
-    
     .tab-content {
         padding: 15px;
     }
     
-    .control-buttons {
-        flex-direction: column;
+    .widget {
+        padding: 20px;
+    }
+    
+    .widget h3 {
+        font-size: 1.2em;
     }
     
     .btn {
-        margin: 5px 0;
+        font-size: 16px;
+        padding: 15px;
+    }
+    
+    .coefficient-input {
+        width: 60px;
+        font-size: 14px;
+        padding: 5px;
     }
     
     .l-params-container {
         grid-template-columns: 1fr;
         height: auto;
         max-height: 400px;
+        gap: 10px;
     }
     
-    .characteristics-names,
-    .params-column {
-        margin-bottom: 15px;
-    }
-    
-    .l-param-item input {
-        width: 45px;
-        font-size: 11px;
+    .characteristics-names h4,
+    .params-column h4 {
+        font-size: 16px;
+        height: 40px;
     }
     
     .characteristic-name-item {
-        font-size: 11px;
-    }
-    
-    .radar-chart-wrapper {
+        font-size: 14px;
+        height: 40px;
         padding: 10px;
     }
     
+    .l-param-item input {
+        width: 60px;
+        font-size: 14px;
+    }
+    
+    .validation-status {
+        padding: 12px;
+    }
+    
+    .status-text {
+        font-size: 14px;
+    }
+    
+    .radar-chart-wrapper {
+        padding: 15px;
+    }
+    
+    .radar-chart-wrapper h4 {
+        font-size: 1.2em;
+    }
+    
     .radar-chart-container {
-        height: 250px;
+        height: 280px; /* Немного меньше для мобильных */
     }
 }
 
 @media (max-width: 480px) {
+    body {
+        font-size: 13px;
+    }
+    
+    h1 {
+        font-size: 1.6em;
+        padding: 15px;
+    }
+    
+    .tab-button {
+        font-size: 14px;
+        padding: 12px;
+    }
+    
+    .widget h3 {
+        font-size: 1.1em;
+    }
+    
+    .btn {
+        font-size: 14px;
+        padding: 12px;
+    }
+    
+    .coefficient-input {
+        width: 50px;
+        font-size: 13px;
+        margin: 0 3px;
+    }
+    
+    .polynomial-item {
+        font-size: 14px;
+        padding: 10px;
+    }
+    
     .radar-charts-grid {
         gap: 15px;
     }
     
     .radar-chart-container {
-        height: 200px;
-    }
-    
-    .widget {
-        padding: 15px;
+        height: 220px;
     }
     
     .chart-container {
         padding: 15px;
         height: 400px;
+    }
+    
+    .radar-header h3 {
+        font-size: 1.5em;
+    }
+    
+    .radar-description {
+        font-size: 14px;
     }
 }
