@@ -499,17 +499,10 @@ const InputsPanel = ({ onCalculate, isCalculating }) => {
                 {isCalculating ? 'Расчет...' : 'Провести расчеты'}
               </button>
               <button 
-                id="random-btn" 
-                className="btn secondary"
-                onClick={fillRandomValues}
-              >
-                Случайные значения
-              </button>
-              <button 
                 className="btn btn-secondary"
                 onClick={fillGoodValues}
               >
-                Нормальные значения
+                Случайные значения
               </button>
               
               <div className={`validation-status ${isValid ? 'valid' : ''}`} id="validation-status">
