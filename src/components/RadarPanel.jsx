@@ -51,7 +51,6 @@ const RadarPanel = ({ results, inputData }) => {
     "L15 - Экологичность"
   ];
 
-  // Фиксированные значения времени для 6 графиков
   const timeValues = [0, 0.2, 0.4, 0.6, 0.8, 1.0];
 
   if (!results || !results.t || !results.L) {
@@ -69,7 +68,6 @@ const RadarPanel = ({ results, inputData }) => {
     );
   }
 
-  // Находим индекс времени в массиве результатов
   const findTimeIndex = (targetTime) => {
     if (!Array.isArray(results.t) || results.t.length === 0) return 0;
     
@@ -87,7 +85,6 @@ const RadarPanel = ({ results, inputData }) => {
     return closestIndex;
   };
 
-  // Получаем значения для конкретного времени
   const getValuesForTime = (timeValue) => {
     const timeIndex = findTimeIndex(timeValue);
     return results.L.map((trajectory, i) => {
@@ -99,7 +96,6 @@ const RadarPanel = ({ results, inputData }) => {
     });
   };
 
-  // Данные для каждого графика
   const getRadarDataForTime = (timeValue) => {
     const currentValues = getValuesForTime(timeValue);
     
@@ -242,7 +238,7 @@ const RadarPanel = ({ results, inputData }) => {
             const charName = characteristicNames[charIndex]?.split(' - ')[1] || `L${charIndex + 1}`;
             const min = minValues[charIndex] || 0;
             const max = maxValues[charIndex] || 1;
-            return `${charName}: ${value} (min: ${min.toFixed(2)}, max: ${max.toFixed(2)})`;
+            return `${value} (мин: ${min.toFixed(2)}, макс: ${max.toFixed(2)})`;
           }
         }
       }

@@ -7,7 +7,6 @@ const InputsPanel = ({ onCalculate, isCalculating }) => {
   const [lParams, setLParams] = useState({});
   const [isValid, setIsValid] = useState(false);
 
-  // Ключи для localStorage
   const STORAGE_KEYS = {
     fCoeffs: 'math_model_f_coeffs',
     qCoeffs: 'math_model_q_coeffs',
@@ -42,7 +41,6 @@ const InputsPanel = ({ onCalculate, isCalculating }) => {
 
   const [fArguments] = useState(generateFArguments());
 
-  // Функция загрузки из localStorage
   const loadFromStorage = () => {
     try {
       const savedFCoeffs = localStorage.getItem(STORAGE_KEYS.fCoeffs);
@@ -70,7 +68,6 @@ const InputsPanel = ({ onCalculate, isCalculating }) => {
     }
   };
 
-  // Функция сохранения в localStorage
   const saveToStorage = () => {
     try {
       localStorage.setItem(STORAGE_KEYS.fCoeffs, JSON.stringify(fCoeffs));
@@ -82,27 +79,23 @@ const InputsPanel = ({ onCalculate, isCalculating }) => {
     }
   };
 
-  // Автосохранение при изменении данных
   useEffect(() => {
     const hasData = Object.keys(fCoeffs).length > 0 && 
                     Object.keys(qCoeffs).length > 0 && 
                     Object.keys(lParams).length > 0;
     
     if (hasData) {
-      // Используем debounce для автосохранения
       const timeoutId = setTimeout(() => {
         saveToStorage();
-      }, 500); // Сохраняем через 500 мс после последнего изменения
+      }, 500);
       
       return () => clearTimeout(timeoutId);
     }
   }, [fCoeffs, qCoeffs, lParams]);
 
   useEffect(() => {
-    // При монтировании проверяем, есть ли сохраненные данные
     const savedData = loadFromStorage();
     
-    // Если нет сохраненных данных, инициализируем пустыми значениями
     if (!savedData.hasFCoeffs && !savedData.hasQCoeffs && !savedData.hasLParams) {
       initializeData();
     }
@@ -276,32 +269,29 @@ const InputsPanel = ({ onCalculate, isCalculating }) => {
   const fillGoodValues = () => {
     console.log('Заполнение нормальными значениями...');
     
-    // Хорошие коэффициенты для f (близкие к 0.1-0.3)
     const newFCoeffs = {};
     for (let j = 1; j <= 98; j++) {
       newFCoeffs[`f${j}_a`] = (Math.random() * 0.1 - 0.05).toFixed(3);
       newFCoeffs[`f${j}_b`] = (Math.random() * 0.2 - 0.1).toFixed(3);
       newFCoeffs[`f${j}_c`] = (Math.random() * 0.3 - 0.15).toFixed(3);
-      newFCoeffs[`f${j}_d`] = (Math.random() * 0.1 + 0.1).toFixed(3); // положительный сдвиг
+      newFCoeffs[`f${j}_d`] = (Math.random() * 0.1 + 0.1).toFixed(3);
     }
     setFCoeffs(newFCoeffs);
 
-    // Маленькие значения для q (возмущения)
     const newQCoeffs = {};
     for (let k = 1; k <= 5; k++) {
       newQCoeffs[`q${k}_a`] = (Math.random() * 0.05 - 0.025).toFixed(4);
       newQCoeffs[`q${k}_b`] = (Math.random() * 0.05 - 0.025).toFixed(4);
       newQCoeffs[`q${k}_c`] = (Math.random() * 0.1 - 0.05).toFixed(4);
-      newQCoeffs[`q${k}_d`] = (Math.random() * 0.05 + 0.05).toFixed(4); // положительный сдвиг
+      newQCoeffs[`q${k}_d`] = (Math.random() * 0.05 + 0.05).toFixed(4);
     }
     setQCoeffs(newQCoeffs);
 
-    // Реалистичные значения для L
     const newLParams = {};
     for (let i = 1; i <= 15; i++) {
-      const min = (Math.random() * 0.2).toFixed(2); // 0-0.2
-      const init = (Math.random() * 0.3 + 0.3).toFixed(2); // 0.3-0.6
-      const max = (Math.random() * 0.3 + 0.7).toFixed(2); // 0.7-1.0
+      const min = (Math.random() * 0.2).toFixed(2);
+      const init = (Math.random() * 0.3 + 0.3).toFixed(2);
+      const max = (Math.random() * 0.3 + 0.7).toFixed(2);
       
       newLParams[`l${i}_min`] = min;
       newLParams[`l${i}_init`] = init;

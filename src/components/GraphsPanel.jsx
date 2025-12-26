@@ -1,29 +1,18 @@
-import { useRef } from 'react';
+import React, { useMemo } from 'react';
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
   Tooltip,
   Legend,
-} from 'chart.js';
-import { Line } from 'react-chartjs-2';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
+  ResponsiveContainer,
+  Label,
+  ReferenceLine
+} from 'recharts';
 
 const GraphsPanel = ({ results }) => {
-  const chartRefs = useRef([]);
-
   if (!results || !results.t || !results.L) {
     return (
       <div className="tab-content active">
@@ -53,304 +42,183 @@ const GraphsPanel = ({ results }) => {
     "L15 - Экологичность"
   ];
 
-  // Контрастные цвета для троек
-  const colorTriplets = [
-    // Первая тройка (L1-L3)
-    [
-      '#00aeff', // светло-синий (контрастный)
-      '#ff7c43', // оранжевый (контрастный)
-      '#2f4b7c', // синий (промежуточный)
-    ],
-    // Вторая тройка (L4-L6)
-    [
-      '#a05195', // фиолетовый
-      '#ffa600', // желтый (контрастный)
-      '#d45087', // розовый
-    ],
-    // Третья тройка (L7-L9)
-    [
-      '#665191', // пурпурный
-      '#f95d6a', // красный
-      '#ff7c00', // оранжевый
-    ],
-    // Четвертая тройка (L10-L12)
-    [
-      '#00a86b', // зеленый
-      '#8a2be2', // сине-фиолетовый
-      '#ff4500', // красно-оранжевый
-    ],
-    // Пятая тройка (L13-L15)
-    [
-      '#008080', // бирюзовый
-      '#ff1493', // глубокий розовый
-      '#ffd700', // золотой
-    ]
+  // Цвета для линий
+  const lineColors = [
+    '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+    '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf',
+    '#aec7e8', '#ffbb78', '#98df8a', '#ff9896', '#c5b0d5'
   ];
 
-  // Функция для нахождения максимального значения в данных
-  const getMaxValue = (dataArray) => {
-    if (!Array.isArray(dataArray) || dataArray.length === 0) return 1;
-    let max = 0;
-    dataArray.forEach(data => {
-      if (Array.isArray(data)) {
-        const localMax = Math.max(...data);
-        if (localMax > max) max = localMax;
-      }
-    });
-    return Math.ceil(max * 1.1 * 10) / 10 || 1;
+  // Создаем массив данных для графиков
+  const prepareChartData = () => {
+    const data = [];
+    const numPoints = results.t.length;
+    
+    for (let i = 0; i < numPoints; i++) {
+      const point = {
+        t: results.t[i],
+        time: results.t[i]
+      };
+      
+      // Добавляем все L значения
+      results.L.forEach((LArray, index) => {
+        if (LArray && LArray[i] !== undefined) {
+          point[`L${index + 1}`] = LArray[i];
+        }
+      });
+      
+      data.push(point);
+    }
+    
+    return data;
   };
 
-  // Функция для получения опций с адаптивной шкалой Y
-  const getAdaptiveOptions = (chartData, chartType = 'L') => {
-    const maxY = getMaxValue(chartData.datasets.map(ds => ds.data));
-    
-    return {
-      responsive: true,
-      maintainAspectRatio: false,
-      onHover: (event, chartElements) => {
-        const canvas = event.native?.target;
-        if (canvas) {
-          if (chartElements && chartElements.length > 0) {
-            canvas.style.cursor = 'none';
-          } else {
-            canvas.style.cursor = 'default';
-          }
-        }
-      },
-      interaction: {
-        mode: 'index',
-        intersect: false,
-      },
-      plugins: {
-        legend: {
-          display: false,
-        },
-        tooltip: {
-          backgroundColor: 'rgba(0, 0, 0, 0.85)',
-          titleFont: {
-            size: 16,
-            family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            weight: '500'
-          },
-          bodyFont: {
-            size: 15,
-            family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-            weight: '400'
-          },
-          padding: 16,
-          cornerRadius: 8,
-          displayColors: false,
-          callbacks: {
-            // Кастомная функция для сортировки элементов тултипа
-            beforeBody: function(context) {
-              // Сортируем элементы по значению в убывающем порядке (от большего к меньшему)
-              context.sort((a, b) => {
-                const aValue = a.parsed.y;
-                const bValue = b.parsed.y;
-                return bValue - aValue; // сортировка по убыванию
-              });
-              return '';
-            }
-          }
-        }
-      },
-      scales: {
-        x: {
-          title: {
-            display: true,
-            text: 'Время t',
-            font: {
-              size: 18,
-              weight: 'bold',
-              family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
-            }
-          },
-          grid: {
-            color: 'rgba(0,0,0,0.1)',
-            lineWidth: 1
-          },
-          ticks: {
-            font: {
-              size: 14,
-              family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
-            }
-          }
-        },
-        y: {
-          title: {
-            display: true,
-            text: 'Значение',
-            font: {
-              size: 18,
-              weight: 'bold',
-              family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
-            }
-          },
-          min: 0,
-          max: maxY,
-          grid: {
-            color: 'rgba(0,0,0,0.1)',
-            lineWidth: 1
-          },
-          ticks: {
-            font: {
-              size: 14,
-              family: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
-            },
-            callback: function(value) {
-              return value.toFixed(2);
-            },
-            stepSize: maxY > 1 ? maxY / 5 : 0.2
-          }
-        }
-      },
-      elements: {
-        point: {
-          radius: 0,
-          hoverRadius: 6,
-          hitRadius: 10
-        },
-        line: {
-          tension: 0.3
-        }
-      }
-    };
-  };
+  const chartData = prepareChartData();
 
-  const labels = Array.isArray(results.t) ? results.t.map(t => t.toFixed(2)) : [];
-
-  // Функция для сортировки данных по последнему значению (конечному значению)
-  const sortDatasetsByFinalValue = (datasetsWithIndices) => {
-    return datasetsWithIndices.sort((a, b) => {
-      const aData = a.data;
-      const bData = b.data;
-      if (!aData || !bData || aData.length === 0 || bData.length === 0) return 0;
-      const aLastValue = aData[aData.length - 1];
-      const bLastValue = bData[bData.length - 1];
-      return bLastValue - aLastValue; // сортировка по убыванию (чтобы сверху вниз в тултипе)
-    });
-  };
-
-  // Создаем данные для группы из 3 характеристик
-  const createChartData = (tripletIndex, indices) => {
-    const colors = colorTriplets[tripletIndex];
-    const datasetsWithIndices = [];
-    
-    indices.forEach((globalIndex, localIndex) => {
-      if (globalIndex < results.L.length) {
-        datasetsWithIndices.push({
-          label: `L${globalIndex + 1}`,
-          data: Array.isArray(results.L[globalIndex]) ? results.L[globalIndex] : [],
-          borderColor: colors[localIndex],
-          backgroundColor: colors[localIndex] + '20',
-          borderWidth: 3,
-          tension: 0.3,
-          fill: false,
-          pointRadius: 0,
-          pointHoverRadius: 6,
-          originalIndex: globalIndex,
-          colorIndex: localIndex
-        });
-      }
-    });
-    
-    // Сортируем по последнему значению (по убыванию)
-    const sortedDatasets = sortDatasetsByFinalValue(datasetsWithIndices);
-    
-    return {
-      labels: labels,
-      datasets: sortedDatasets.map(ds => ({
-        label: ds.label,
-        data: ds.data,
-        borderColor: ds.borderColor,
-        backgroundColor: ds.backgroundColor,
-        borderWidth: ds.borderWidth,
-        tension: ds.tension,
-        fill: ds.fill,
-        pointRadius: ds.pointRadius,
-        pointHoverRadius: ds.pointHoverRadius
-      })),
-      originalIndices: sortedDatasets.map(ds => ds.originalIndex),
-      originalColors: sortedDatasets.map(ds => ds.borderColor)
-    };
-  };
-
-  // 5 групп по 3 характеристики
+  // Группы графиков
   const chartGroups = [
     {
       title: "Финансовые показатели I",
       indices: [0, 1, 2], // L1, L2, L3
-      data: null,
-      tripletIndex: 0
+      colorIndex: 0
     },
     {
       title: "Финансовые показатели II",
       indices: [3, 4, 5], // L4, L5, L6
-      data: null,
-      tripletIndex: 1
+      colorIndex: 3
     },
     {
       title: "Операционные показатели I",
       indices: [6, 7, 8], // L7, L8, L9
-      data: null,
-      tripletIndex: 2
+      colorIndex: 6
     },
     {
       title: "Операционные показатели II",
       indices: [9, 10, 11], // L10, L11, L12
-      data: null,
-      tripletIndex: 3
+      colorIndex: 9
     },
     {
       title: "Качественные показатели",
       indices: [12, 13, 14], // L13, L14, L15
-      data: null,
-      tripletIndex: 4
+      colorIndex: 12
     }
   ];
 
-  // Создаем данные для каждой группы
-  chartGroups.forEach((group, index) => {
-    group.data = createChartData(group.tripletIndex, group.indices);
-  });
-
-  // Функция для обработки ссылок на графики
-  const handleChartRef = (index) => (ref) => {
-    chartRefs.current[index] = ref;
-    
-    if (ref?.canvas) {
-      ref.canvas.style.cursor = 'default';
-      ref.canvas.style.pointerEvents = 'auto';
+  // Кастомный Tooltip
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      // Сортируем по значению (убывание)
+      const sortedPayload = [...payload].sort((a, b) => b.value - a.value);
+      
+      return (
+        <div style={{
+          backgroundColor: 'rgba(255, 255, 255, 0.98)',
+          border: '2px solid #ccc',
+          padding: '15px',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          minWidth: '250px'
+        }}>
+          <p style={{ 
+            marginBottom: '10px', 
+            fontWeight: 'bold',
+            color: '#2c3e50',
+            borderBottom: '2px solid #eee',
+            paddingBottom: '5px',
+            fontSize: '14px'
+          }}>
+            Время: <strong>{label.toFixed(3)}</strong>
+          </p>
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column',
+            gap: '8px'
+          }}>
+            {sortedPayload.map((entry, index) => {
+              const fullName = characteristicNames[parseInt(entry.dataKey.substring(1)) - 1];
+              const shortName = fullName.split(' - ')[0];
+              const description = fullName.split(' - ')[1];
+              
+              return (
+                <div key={`item-${index}`} style={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '4px 0'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{
+                      width: '12px',
+                      height: '12px',
+                      backgroundColor: entry.color,
+                      borderRadius: '2px'
+                    }} />
+                    <span style={{ 
+                      fontWeight: 'bold',
+                      color: entry.color,
+                      minWidth: '40px',
+                      fontSize: '13px'
+                    }}>
+                      {shortName}
+                    </span>
+                  </div>
+                  <span style={{ 
+                    fontWeight: 'bold',
+                    color: '#2c3e50',
+                    fontSize: '13px'
+                  }}>
+                    {entry.value.toFixed(4)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
     }
+    return null;
   };
 
-  // Компонент для отображения графика
-  const ChartWithLabels = ({ chartData, title, originalIndices, originalColors }) => {
-    const chartHeight = 400;
-    
-    // Получаем отсортированные метки в порядке убывания конечных значений
-    const getSortedLabels = () => {
-      const labelsWithValues = [];
-      chartData.datasets.forEach((dataset, index) => {
-        const data = dataset.data;
-        if (data && data.length > 0) {
-          const lastValue = data[data.length - 1];
-          const originalGlobalIndex = originalIndices[index];
-          labelsWithValues.push({
-            label: `L${originalGlobalIndex + 1}`,
-            value: lastValue,
-            color: originalColors[index],
-            originalIndex: originalGlobalIndex,
-            datasetIndex: index
-          });
-        }
-      });
+  // Компонент графика для группы
+  const ChartGroup = ({ group, data }) => {
+    const lines = useMemo(() => {
+      return group.indices.map((index) => ({
+        index,
+        name: `L${index + 1}`,
+        color: lineColors[index],
+        fullName: characteristicNames[index]
+      }));
+    }, [group.indices]);
+
+    // Находим средние точки для каждой линии для подписей
+    const getMidPoints = () => {
+      if (!data || data.length === 0) return [];
       
-      // Сортируем по убыванию (чтобы сверху вниз в тултипе)
-      return labelsWithValues.sort((a, b) => b.value - a.value);
+      const midIndex = Math.floor(data.length / 2);
+      return lines.map(line => ({
+        ...line,
+        x: midIndex,
+        y: data[midIndex] ? data[midIndex][line.name] : 0
+      }));
     };
 
-    const sortedLabels = getSortedLabels();
+    const midPoints = getMidPoints();
+
+    // Находим последние точки для каждой линии
+    const getLastPoints = () => {
+      if (!data || data.length === 0) return [];
+      
+      return lines.map(line => {
+        const lastPoint = data[data.length - 1];
+        return {
+          ...line,
+          value: lastPoint[line.name],
+          x: data.length - 1
+        };
+      });
+    };
+
+    const lastPoints = getLastPoints();
 
     return (
       <div style={{ 
@@ -359,8 +227,7 @@ const GraphsPanel = ({ results }) => {
         padding: '30px', 
         borderRadius: '15px', 
         boxShadow: '0 6px 20px rgba(0,0,0,0.1)',
-        border: '3px solid #e9ecef',
-        position: 'relative'
+        border: '3px solid #e9ecef'
       }}>
         <h2 style={{ 
           marginBottom: '25px', 
@@ -372,34 +239,82 @@ const GraphsPanel = ({ results }) => {
           paddingBottom: '15px',
           borderBottom: '3px solid #f0f0f0'
         }}>
-          {title}
+          {group.title}
         </h2>
         
-        <div style={{ 
-          height: `${chartHeight}px`,
-          position: 'relative',
-          width: '100%'
-        }}>
-          {/* График */}
-          <div style={{ 
-            height: '100%',
-            position: 'relative',
-            zIndex: 20
-          }}>
-            <Line 
-              ref={handleChartRef(originalIndices[0])}
-              data={chartData} 
-              options={getAdaptiveOptions(chartData, 'L')}
-            />
-          </div>
+        <div style={{ height: '500px', width: '100%', position: 'relative' }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={data}
+              margin={{
+                top: 30,
+                right: 30,
+                left: 30,
+                bottom: 30,
+              }}
+            >
+              <CartesianGrid 
+                strokeDasharray="3 3" 
+                stroke="#e0e0e0"
+                vertical={false}
+              />
+              <XAxis 
+                dataKey="t"
+                type="number"
+                domain={[0, 1]}
+                ticks={[0, 0.2, 0.4, 0.6, 0.8, 1.0]}
+                tickFormatter={(value) => value.toFixed(1)}
+                label={{ 
+                  value: 'Время t', 
+                  position: 'bottom',
+                  offset: 10,
+                  style: { fontSize: 14, fontWeight: 'bold' }
+                }}
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis 
+                label={{ 
+                  value: 'Значение', 
+                  angle: -90, 
+                  position: 'left',
+                  offset: 15,
+                  style: { fontSize: 14, fontWeight: 'bold' }
+                }}
+                tick={{ fontSize: 12 }}
+                domain={[0, 'auto']}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Legend 
+                verticalAlign="top"
+                height={50}
+                iconSize={12}
+                iconType="circle"
+                formatter={(value) => {
+                  const index = parseInt(value.substring(1)) - 1;
+                  return `${value} - ${characteristicNames[index].split(' - ')[1]}`;
+                }}
+              />
+              
+              {/* Линии */}
+              {lines.map((line) => (
+                <Line
+                  key={line.name}
+                  type="monotone"
+                  dataKey={line.name}
+                  stroke={line.color}
+                  strokeWidth={3}
+                  dot={false}
+                  activeDot={{ r: 8, strokeWidth: 0 }}
+                  name={line.name}
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
         </div>
         
-        {/* Детальная легенда с полными названиями */}
+        {/* Статистика по группе */}
         <div style={{
-          marginTop: '20px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '15px',
+          marginTop: '30px',
           backgroundColor: '#f8f9fa',
           padding: '20px',
           borderRadius: '12px',
@@ -407,13 +322,13 @@ const GraphsPanel = ({ results }) => {
         }}>
           <h4 style={{ 
             textAlign: 'center',
-            marginBottom: '10px',
+            marginBottom: '15px',
             color: '#2c3e50',
             fontSize: '20px',
             fontWeight: '600',
             fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
           }}>
-            Подробная информация (отсортировано по убыванию конечных значений)
+            Статистика по показателям (отсортировано по убыванию конечных значений)
           </h4>
           
           <div style={{
@@ -421,109 +336,105 @@ const GraphsPanel = ({ results }) => {
             gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
             gap: '15px'
           }}>
-            {sortedLabels.map((label, idx) => {
-              const globalIndex = label.originalIndex;
-              const data = results.L[globalIndex];
-              const max = data && data.length > 0 ? Math.max(...data).toFixed(3) : '0.000';
-              const min = data && data.length > 0 ? Math.min(...data).toFixed(3) : '0.000';
-              const avg = data && data.length > 0 
-                ? (data.reduce((a, b) => a + b, 0) / data.length).toFixed(3) 
-                : '0.000';
-              const lastValue = data && data.length > 0 ? data[data.length - 1].toFixed(3) : '0.000';
-              
-              return (
-                <div key={idx} style={{
-                  backgroundColor: 'white',
-                  padding: '15px',
-                  borderRadius: '8px',
-                  border: `2px solid ${label.color}30`,
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-                }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '12px',
-                    marginBottom: '10px'
+            {lastPoints
+              .sort((a, b) => b.value - a.value)
+              .map((point, idx) => {
+                const LArray = results.L[point.index];
+                const values = LArray || [];
+                const max = values.length > 0 ? Math.max(...values).toFixed(4) : '0.0000';
+                const min = values.length > 0 ? Math.min(...values).toFixed(4) : '0.0000';
+                const avg = values.length > 0 
+                  ? (values.reduce((a, b) => a + b, 0) / values.length).toFixed(4) 
+                  : '0.0000';
+                
+                return (
+                  <div key={idx} style={{
+                    backgroundColor: 'white',
+                    padding: '15px',
+                    borderRadius: '8px',
+                    borderLeft: `4px solid ${point.color}`,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
                   }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '12px',
+                      marginBottom: '10px'
+                    }}>
+                      <div style={{
+                        width: '16px',
+                        height: '16px',
+                        backgroundColor: point.color,
+                        borderRadius: '4px'
+                      }}></div>
+                      <span style={{ 
+                        fontSize: '18px', 
+                        fontWeight: '700',
+                        color: point.color,
+                        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+                      }}>
+                        {point.name}
+                      </span>
+                    </div>
+                    
+                    <div style={{ 
+                      fontSize: '14px', 
+                      color: '#555',
+                      marginBottom: '15px',
+                      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+                      fontStyle: 'italic'
+                    }}>
+                      {characteristicNames[point.index].split(' - ')[1]}
+                    </div>
+                    
                     <div style={{
-                      width: '20px',
-                      height: '20px',
-                      backgroundColor: label.color,
-                      borderRadius: '4px'
-                    }}></div>
-                    <span style={{ 
-                      fontSize: '18px', 
-                      fontWeight: '700',
-                      color: label.color,
-                      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(2, 1fr)',
+                      gap: '10px',
+                      fontSize: '13px'
                     }}>
-                      {label.label}
-                    </span>
-                    <span style={{
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      color: '#666',
-                      marginLeft: 'auto',
-                      backgroundColor: '#e9ecef',
-                      padding: '2px 8px',
-                      borderRadius: '4px'
-                    }}>
-                      Порядок: {idx + 1}
-                    </span>
-                  </div>
-                  
-                  <div style={{ 
-                    fontSize: '16px', 
-                    color: '#555',
-                    marginBottom: '15px',
-                    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
-                  }}>
-                    {characteristicNames[globalIndex].split(' - ')[1]}
-                  </div>
-                  
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(4, 1fr)',
-                    gap: '8px',
-                    fontSize: '14px'
-                  }}>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontWeight: '600', color: '#666' }}>Мин</div>
-                      <div style={{ fontWeight: '700', color: '#dc3545' }}>{min}</div>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontWeight: '600', color: '#666' }}>Ср</div>
-                      <div style={{ fontWeight: '700', color: '#17a2b8' }}>{avg}</div>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontWeight: '600', color: '#666' }}>Макс</div>
-                      <div style={{ fontWeight: '700', color: '#28a745' }}>{max}</div>
-                    </div>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontWeight: '600', color: '#666' }}>Конец</div>
-                      <div style={{ fontWeight: '700', color: label.color }}>{lastValue}</div>
+                      <div>
+                        <div style={{ fontWeight: '600', color: '#666' }}>Минимальное:</div>
+                        <div style={{ fontWeight: '700', color: '#dc3545' }}>{min}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: '600', color: '#666' }}>Максимальное:</div>
+                        <div style={{ fontWeight: '700', color: '#28a745' }}>{max}</div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
           </div>
         </div>
       </div>
     );
   };
 
+  // Вспомогательная функция для получения максимального Y значения
+  const getMaxYValue = (data, lines) => {
+    if (!data || data.length === 0) return 1;
+    
+    let max = 0;
+    lines.forEach(line => {
+      data.forEach(point => {
+        if (point[line.name] > max) {
+          max = point[line.name];
+        }
+      });
+    });
+    
+    return max || 1;
+  };
+
   return (
     <div className="tab-content active">
       <div style={{ padding: '30px' }}>
-        {/* 5 графиков по 3 характеристики */}
         {chartGroups.map((group, index) => (
-          <ChartWithLabels
+          <ChartGroup
             key={index}
-            chartData={group.data}
-            title={group.title}
-            originalIndices={group.data.originalIndices}
-            originalColors={group.data.originalColors}
+            group={group}
+            data={chartData}
           />
         ))}
       </div>

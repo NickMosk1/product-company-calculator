@@ -48,27 +48,22 @@ const DisturbancesPanel = ({ results }) => {
     '#003f5c', '#2f4b7c', '#665191', '#a05195', '#d45087'
   ];
 
-  // Функция для нахождения максимального значения в данных
   const getMaxValue = (data) => {
     if (!Array.isArray(data) || data.length === 0) return 1;
     const max = Math.max(...data);
-    // Добавляем 10% запаса сверху
     return Math.ceil(max * 1.1 * 10) / 10 || 1;
   };
 
-  // Функция для получения опций с адаптивной шкалой Y
   const getAdaptiveOptions = (index, isMainChart = false) => {
     let maxY = 1;
     
     if (isMainChart) {
-      // Для основного графика находим максимальное значение среди всех возмущений
       const allMaxValues = results.q.map(trajectory => 
         Array.isArray(trajectory) ? Math.max(...trajectory) : 0
       );
       maxY = Math.max(...allMaxValues, 0.1);
       maxY = Math.ceil(maxY * 1.1 * 10) / 10 || 1;
     } else {
-      // Для индивидуального графика находим максимальное значение для конкретного возмущения
       const trajectory = results.q[index];
       if (Array.isArray(trajectory)) {
         maxY = Math.max(...trajectory);
@@ -189,12 +184,12 @@ const DisturbancesPanel = ({ results }) => {
       },
       elements: {
         point: {
-          radius: 0, // Убираем точки, оставляем только линии
-          hoverRadius: 6, // Точки появляются только при наведении
+          radius: 0,
+          hoverRadius: 6,
           hitRadius: 10
         },
         line: {
-          tension: 0.3 // Плавные линии
+          tension: 0.3
         }
       }
     };
@@ -202,7 +197,6 @@ const DisturbancesPanel = ({ results }) => {
 
   const labels = Array.isArray(results.t) ? results.t.map(t => t.toFixed(2)) : [];
 
-  // Данные для основного графика (все возмущения вместе)
   const mainChartData = {
     labels: labels,
     datasets: results.q.map((trajectory, i) => ({
@@ -218,7 +212,6 @@ const DisturbancesPanel = ({ results }) => {
     }))
   };
 
-  // Данные для индивидуальных графиков (по одному на каждое возмущение)
   const individualChartsData = results.q.map((trajectory, i) => ({
     labels: labels,
     datasets: [{
@@ -234,7 +227,6 @@ const DisturbancesPanel = ({ results }) => {
     }]
   }));
 
-  // Статистика по возмущениям
   const calculateStatistics = (index) => {
     const data = results.q[index] || [];
     if (data.length === 0) return { avg: 0, min: 0, max: 0, std: 0 };
@@ -250,7 +242,6 @@ const DisturbancesPanel = ({ results }) => {
     return { avg, min, max, std };
   };
 
-  // Функция для обработки ссылок на графики
   const handleChartRef = (index) => (ref) => {
     chartRefs.current[index] = ref;
     
@@ -264,7 +255,6 @@ const DisturbancesPanel = ({ results }) => {
     <div className="tab-content active">
       <div style={{ padding: '30px' }}>
 
-        {/* Основной график - все возмущения */}
         <div style={{ 
           marginBottom: '60px', 
           backgroundColor: 'white', 
@@ -282,7 +272,6 @@ const DisturbancesPanel = ({ results }) => {
           </div>
         </div>
 
-        {/* Индивидуальные графики для каждого возмущения */}
         <div style={{ marginBottom: '40px' }}>
           <h2 style={{ 
             marginBottom: '40px', 
@@ -325,7 +314,6 @@ const DisturbancesPanel = ({ results }) => {
                   e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.1)';
                 }}
                 >
-                  {/* Название q1, q2 и т.д. прямо на графике */}
                   <div style={{
                     position: 'absolute',
                     top: '50%',

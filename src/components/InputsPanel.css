@@ -153,7 +153,6 @@
     box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
 }
 
-/* Стили для параметров L */
 .l-params-container {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr 1fr;
@@ -250,7 +249,6 @@
     box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
 }
 
-/* Стили для скроллбаров */
 .scrollable-list::-webkit-scrollbar,
 .l-params-container::-webkit-scrollbar {
     width: 8px;
@@ -273,7 +271,6 @@
     background: #a8a8a8;
 }
 
-/* Адаптивность */
 @media (max-width: 1200px) {
     .widgets-container {
         grid-template-columns: 1fr;

@@ -9,7 +9,7 @@ body {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
     padding: 20px;
-    font-size: 16px; /* Увеличен базовый размер шрифта */
+    font-size: 16px;
 }
 
 .container {
@@ -27,7 +27,7 @@ h1 {
     background: linear-gradient(135deg, #2c3e50, #34495e);
     color: white;
     margin: 0;
-    font-size: 2.5em; /* Увеличено с 2.2em */
+    font-size: 2.5em;
     font-weight: 600;
 }
 
@@ -43,7 +43,7 @@ h1 {
     border: none;
     background: none;
     cursor: pointer;
-    font-size: 18px; /* Увеличено с 16px */
+    font-size: 18px;
     font-weight: 500;
     color: #6c757d;
     transition: all 0.3s ease;
@@ -89,7 +89,7 @@ h1 {
 .widget h3 {
     margin-bottom: 15px;
     color: #2c3e50;
-    font-size: 1.4em; /* Увеличено с 1.2em */
+    font-size: 1.4em;
     text-align: center;
     font-weight: 600;
 }
@@ -113,16 +113,16 @@ h1 {
 .control-buttons {
     display: flex;
     flex-direction: column;
-    gap: 20px; /* Увеличено */
+    gap: 20px;
     margin-bottom: auto;
 }
 
 .btn {
-    padding: 18px 30px; /* Увеличено */
+    padding: 18px 30px;
     border: none;
     border-radius: 8px;
-    font-size: 18px; /* Увеличено с 16px */
-    font-weight: 600; /* Сделано жирнее */
+    font-size: 18px;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     width: 100%;
@@ -148,7 +148,7 @@ h1 {
 .btn.secondary {
     background: #6c757d;
     color: white;
-    font-size: 18px; /* Добавлено для единообразия */
+    font-size: 18px;
 }
 
 .btn.secondary:hover {
@@ -156,7 +156,6 @@ h1 {
     transform: translateY(-2px);
 }
 
-/* Стили для новой кнопки */
 .btn.btn-info {
     background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
     color: white;
@@ -190,7 +189,7 @@ h1 {
 .validation-status {
     display: flex;
     align-items: center;
-    padding: 15px; /* Увеличено */
+    padding: 15px;
     border-radius: 8px;
     background: #fff3cd;
     border: 1px solid #ffeaa7;
@@ -198,13 +197,13 @@ h1 {
 }
 
 .status-icon {
-    margin-right: 12px; /* Увеличено */
-    font-size: 22px; /* Увеличено */
+    margin-right: 12px;
+    font-size: 22px;
 }
 
 .status-text {
     color: #856404;
-    font-size: 16px; /* Увеличено с 14px */
+    font-size: 16px;
     font-weight: 500;
 }
 
@@ -222,21 +221,21 @@ h1 {
 }
 
 .scrollable-list {
-    height: 350px; /* Увеличено */
+    height: 350px;
     overflow-y: auto;
     border: 1px solid #ddd;
     border-radius: 5px;
     background: white;
-    padding: 15px; /* Увеличено */
+    padding: 15px;
 }
 
 .polynomial-item, .l-param-item {
-    margin-bottom: 12px; /* Увеличено */
-    padding: 12px; /* Увеличено */
+    margin-bottom: 12px;
+    padding: 12px;
     background: white;
     border-radius: 5px;
     border: 1px solid #e9ecef;
-    font-size: 16px; /* Увеличено с 14px */
+    font-size: 16px;
     line-height: 1.4;
 }
 
@@ -245,32 +244,31 @@ h1 {
 }
 
 .coefficient-input {
-    width: 70px; /* Увеличено */
-    margin: 0 6px; /* Увеличено */
-    padding: 6px; /* Увеличено */
+    width: 70px;
+    margin: 0 6px;
+    padding: 6px;
     border: 1px solid #ced4da;
     border-radius: 4px;
     text-align: center;
-    font-size: 16px; /* Увеличено с 12px */
+    font-size: 16px;
 }
 
 .coefficient-input:focus {
     outline: none;
     border-color: #007bff;
-    box-shadow: 0 0 0 3px rgba(0,123,255,0.25); /* Увеличено */
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.25);
 }
 
-/* Стили для параметров L */
 .l-params-container {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr 1fr;
-    gap: 15px; /* Увеличено */
-    height: 350px; /* Увеличено */
+    gap: 15px;
+    height: 350px;
     overflow-y: auto;
     border: 1px solid #ddd;
     border-radius: 5px;
     background: white;
-    padding: 15px; /* Увеличено */
+    padding: 15px;
 }
 
 .characteristics-names {
@@ -280,9 +278,9 @@ h1 {
 
 .characteristics-names h4 {
     text-align: center;
-    margin-bottom: 15px; /* Увеличено */
+    margin-bottom: 15px;
     color: #495057;
-    height: 50px; /* Увеличено */
+    height: 50px;
     display: flex;
     align-items: center;
     justify-content: center;
